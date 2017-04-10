@@ -1,18 +1,15 @@
 # coding=utf-8
 import socket
-from services import dory
+from services import send
 import threading, getopt, sys, string
 
 opts, args = getopt.getopt(sys.argv[1:], "hp:l:s:t:a", ["help", "port=", "list=", "socket-path=", "topic=", "address="])
-list = 50
-port = 9010
-host = '0.0.0.0'
-socketPath = '/root/dory.socket'
+list = 0
+port = 9020
+host = '127.0.0.1'
+socketPath = '/var/run/dory/dory.socket'
 topic = 'test'
 msgKey = ''
-
-mc = dory.DoryMsgCreator()
-dory_sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
 
 
 def usage():
@@ -41,42 +38,17 @@ for op, value in opts:
         usage()
         sys.exit()
 
+dory = send.SendToDory()
+
 
 def jonnyS(client, address):
     try:
-        client.settimeout(500)
-        buf = client.recv(2048)
-        print 'conn to address: {}'.format(address)
-        print 'get message: {}'.format(buf)
-        client.send(buf)
-        # sendToDory(buf, socketPath, topic)
+        # client.settimeout(500)
+        messages = client.recv(2048)
+        dory.send(messages, socketPath, topic, msgKey)
     except socket.timeout:
         print 'time out'
-    client.close()
-
-
-def sendToDory(message, socketPath, topic, msgKey=''):
-    try:
-        any_partition_msg = mc.create_any_partition_msg(topic,
-                                                        mc.GetEpochMilliseconds(),
-                                                        bytes(msgKey),
-                                                        bytes(message)
-                                                        )
-    except dory.DoryTopicTooLarge as x:
-        sys.stderr.write(str(x) + '\n')
-        sys.exit(1)
-    except dory.DoryMsgTooLarge as x:
-        sys.stderr.write(str(x) + '\n')
-        sys.exit(1)
-
-    try:
-        dory_sock.sendto(any_partition_msg, socketPath)
-    except socket.error as x:
-        sys.stderr.write('Error sending UNIX datagram to Dory: ' + x.strerror + \
-                         '\n')
-        sys.exit(1)
-    finally:
-        dory_sock.close()
+        client.close()
 
 
 def main():
