@@ -5,7 +5,7 @@ import threading, getopt, sys, string
 
 opts, args = getopt.getopt(sys.argv[1:], "hp:l:s:t:a", ["help", "port=", "list=", "socket-path=", "topic=", "address="])
 list = 0
-port = 9020
+port = 9010
 host = '127.0.0.1'
 socketPath = '/var/run/dory/dory.socket'
 topic = 'test'
